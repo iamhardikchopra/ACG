@@ -1,0 +1,1099 @@
+<title>Shirwal Control Tower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky plant header + tab rail; each tab is one operating view of the plant, summary tiles first, detail below. */
+:root {
+  --bg: #ffffff;
+  --surface: #fdf2f4;
+  --surface-2: #fbe4e9;
+  --ink: #222222;
+  --ink-2: #4b4447;
+  --ink-3: #7d6c71;
+  --line: #f3c1cc;
+  --accent: #8a1538;
+  --accent-ink: #ffffff;
+  --accent-soft: #fdecef;
+  --title: #c8102e; --band: #8a1538; --band-2: #6e0e26; --bar: #e11d48; --band-ink: #ffffff; --band-soft: #f7c9d4;
+  --l1: #e11d48; --l2: #6e0e26; --l3: #3f3f46;
+  --st1: #f2b8c6; --st2: #e07a93; --st3: #c94d6d; --st4: #a8344f; --st5: #8a1538; --st6: #6e0e26;
+  --zb: #9ca3af; --zc: #d1d5db;
+  --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #d03b3b;
+  --good-ink: #0a6d0a; --warn-ink: #8a5a00; --serious-ink: #a8441c; --crit-ink: #b02a2a;
+  --font-display: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-body: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #120a0c; --surface: #1d1013; --surface-2: #29161b; --ink: #f5eef0; --ink-2: #d6c4c9; --ink-3: #a8939a;
+    --line: #4a2731; --accent: #f27a96; --accent-ink: #120a0c; --accent-soft: #3a1a23;
+    --title: #ff6b88; --band: #6e0e26; --band-2: #4f0a1c; --bar: #c8103a; --band-ink: #ffffff; --band-soft: #f7c9d4;
+    --l1: #f0466b; --l2: #c06080; --l3: #a1a1aa;
+    --st1: #5a1a2b; --st2: #7d2440; --st3: #a8344f; --st4: #c94d6d; --st5: #e07a93; --st6: #f2b8c6;
+    --zb: #6b7280; --zc: #3f454d;
+    --good-ink: #4fd24f; --warn-ink: #fab219; --serious-ink: #f09a77; --crit-ink: #ef7a7a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #120a0c; --surface: #1d1013; --surface-2: #29161b; --ink: #f5eef0; --ink-2: #d6c4c9; --ink-3: #a8939a;
+    --line: #4a2731; --accent: #f27a96; --accent-ink: #120a0c; --accent-soft: #3a1a23;
+    --title: #ff6b88; --band: #6e0e26; --band-2: #4f0a1c; --bar: #c8103a; --band-ink: #ffffff; --band-soft: #f7c9d4;
+    --l1: #f0466b; --l2: #c06080; --l3: #a1a1aa;
+    --st1: #5a1a2b; --st2: #7d2440; --st3: #a8344f; --st4: #c94d6d; --st5: #e07a93; --st6: #f2b8c6;
+    --zb: #6b7280; --zc: #3f454d;
+    --good-ink: #4fd24f; --warn-ink: #fab219; --serious-ink: #f09a77; --crit-ink: #ef7a7a;
+    color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+.mono, .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(20px, 2.6vw, 26px); font-weight: 750; font-stretch: 85%; letter-spacing: -0.01em; }
+h2 { font-size: 17px; font-weight: 700; font-stretch: 90%; }
+h3 { font-size: 13px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+p { margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 28px); }
+
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-block: 12px 8px; }
+.brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.brand .sub { color: var(--ink-3); font-size: 12.5px; }
+.flag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); border: 1px dashed var(--ink-3); }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 0; }
+nav.tabs button { font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2); background: none; border: 0; border-bottom: 3px solid transparent; padding: 8px 12px 9px; cursor: pointer; white-space: nowrap; }
+nav.tabs button:hover { color: var(--ink); }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--l1); outline-offset: 2px; }
+
+main { padding-block: 20px 48px; }
+section.panel { display: grid; gap: 16px; }
+.panel-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; }
+.panel-head p { color: var(--ink-2); max-width: 70ch; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.grid-2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.box-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.note { font-size: 12px; color: var(--ink-3); }
+
+.kpis { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.kpi { background: var(--surface); padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.kpi .lab { font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+.kpi .val { font-family: var(--font-data); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.kpi .val small { font-size: 13px; color: var(--ink-3); font-weight: 500; }
+.kpi .ctx { font-size: 12px; color: var(--ink-2); }
+
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); }
+.chip .dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.chip.good { color: var(--good-ink); } .chip.good .dot { background: var(--good); border-radius: 50%; }
+.chip.warn { color: var(--warn-ink); } .chip.warn .dot { background: var(--warn); transform: rotate(45deg); }
+.chip.serious { color: var(--serious-ink); } .chip.serious .dot { background: var(--serious); }
+.chip.crit { color: var(--crit-ink); } .chip.crit .dot { background: var(--crit); }
+.lane { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.lane i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.lane.cat i { background: var(--l1); } .lane.con i { background: var(--l2); } .lane.bes i { background: var(--l3); }
+
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-size: 11px; font-weight: 650; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.r, th.r { text-align: right; }
+td.num { white-space: nowrap; }
+tbody tr:hover { background: var(--surface-2); }
+.prog { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; width: 132px; }
+.prog span { height: 8px; border-radius: 1px; background: var(--surface-2); outline: 1px solid var(--line); outline-offset: -1px; }
+.prog span.done { background: var(--ink-3); outline: none; }
+.prog span.now { background: var(--l1); outline: none; }
+
+.controls { display: grid; gap: 14px; }
+.ctl { display: grid; gap: 6px; }
+.ctl label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { font-family: var(--font-data); font-weight: 600; color: var(--ink); }
+select { font: inherit; font-size: 13.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 7px 8px; width: 100%; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button { font: inherit; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border: 0; background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.big { font-family: var(--font-data); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat-row { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.stat-row > div { display: grid; gap: 2px; }
+.stat-row .lab { font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+.stat-row .v { font-family: var(--font-data); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.modlist { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.modlist li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: baseline; padding: 6px 8px; border-radius: 4px; background: var(--surface-2); }
+.modlist code { font-family: var(--font-data); font-size: 12px; color: var(--ink-2); }
+.tag { font-size: 11px; font-weight: 650; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+.tag.pre { color: var(--good-ink); border: 1px solid var(--good); }
+.tag.opt { color: var(--ink-2); border: 1px solid var(--ink-3); }
+.tag.new { color: var(--serious-ink); border: 1px solid var(--serious); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 10px; border-radius: 2px; display: inline-block; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--font-data); }
+
+.road { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.road .col { border-top: 3px solid var(--ink-3); padding-top: 10px; display: grid; gap: 8px; align-content: start; }
+.road .col.y1 { border-top-color: var(--st2); } .road .col.y2 { border-top-color: var(--st4); } .road .col.y3 { border-top-color: var(--st6); }
+.road ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.gate-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; border: 1px dashed var(--ink-3); border-radius: 6px; background: var(--surface-2); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.checks li { display: flex; gap: 8px; align-items: baseline; }
+.checks li::before { content: "✓"; font-weight: 700; color: var(--good-ink); }
+
+#tip { position: fixed; z-index: 50; pointer-events: none; max-width: 280px; background: var(--ink); color: var(--surface); font-size: 12px; line-height: 1.4; padding: 7px 9px; border-radius: 4px; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+footer { color: var(--ink-3); font-size: 12px; padding-block: 0 32px; }
+@media (prefers-reduced-motion: no-preference) { .bar-anim { transition: width .25s ease; } }
+
+/* ACG slide theme: white page, blush boxes with crimson header bars, maroon KPI tiles and tab rail */
+h1 { color: var(--title); font-weight: 700; font-stretch: normal; }
+.panel-head h2 { color: var(--band); font-size: 18px; }
+:root[data-theme="dark"] .panel-head h2 { color: var(--title); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .panel-head h2 { color: var(--title); } }
+header.top { border-bottom: 0; background: var(--bg); }
+.right-brand { display: flex; align-items: center; gap: 14px; }
+.right-brand img.lockup { height: 40px; width: auto; display: block; }
+nav.tabs { background: var(--band); border-radius: 6px; padding: 5px 6px; gap: 4px; align-items: center; margin-bottom: 10px; }
+nav.tabs img.tab-logo { height: 28px; width: auto; flex: none; margin: 0 8px 0 2px; display: block; }
+nav.tabs button { color: var(--band-soft); border-bottom: 0; border-radius: 4px; padding: 7px 12px; }
+nav.tabs button:hover { color: var(--band-ink); background: rgba(255,255,255,.08); }
+nav.tabs button[aria-selected="true"] { color: var(--band-ink); background: var(--bar); }
+nav.tabs button:focus-visible { outline-color: #fff; }
+.box { border-color: var(--line); }
+.box > .box-head:first-child { margin: -16px -16px 0; padding: 8px 16px; background: var(--bar); border-radius: 5px 5px 0 0; align-items: center; }
+.box > .box-head:first-child h3 { color: #fff; letter-spacing: 0.04em; }
+.box > .box-head:first-child .note { color: rgba(255,255,255,.85); }
+.box > .box-head:first-child .lane { background: #fff; color: #222; padding: 2px 9px; border-radius: 999px; }
+.kpis { background: none; border: 0; gap: 8px; border-radius: 0; overflow: visible; }
+.kpi { background: var(--band); color: var(--band-ink); border-radius: 6px; }
+.kpi .lab { color: var(--band-soft); }
+.kpi .val small { color: var(--band-soft); }
+.kpi .ctx { color: #fde7ec; }
+.flag { background: var(--accent-soft); border-color: var(--band); color: var(--band); }
+.seg button[aria-pressed="true"] { background: var(--band); }
+th { color: var(--band); }
+:root[data-theme="dark"] th { color: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) th { color: var(--accent); } }
+
+:root[data-theme="dark"] .flag { color: var(--title); border-color: var(--title); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .flag { color: var(--title); border-color: var(--title); } }
+.right-brand { flex-wrap: wrap; }
+@media (max-width: 600px) { .right-brand img.lockup { height: 30px; } .flag { white-space: nowrap; font-size: 11px; } }
+
+/* Executive layer: headline per tab, status on tiles, demo-mode tabs, present mode */
+.headline { display: flex; gap: 12px; align-items: flex-start; background: var(--accent-soft); border: 1px solid var(--line); border-left: 6px solid var(--bar); border-radius: 6px; padding: 12px 16px; font-size: 16.5px; font-weight: 700; color: var(--ink); line-height: 1.45; }
+.headline .tag-hl { flex: none; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--bar); padding: 3px 8px; border-radius: 4px; margin-top: 2px; }
+.headline b { color: var(--title); }
+.kpi .val, .stat-row .v, .big { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
+.kpi .lab[data-tip] { text-decoration: underline dotted rgba(255,255,255,.5); text-underline-offset: 3px; cursor: help; }
+.kpi .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.2); flex-wrap: wrap; }
+.kpi .tgt { font-size: 12px; color: var(--band-soft); }
+.badge { display: inline-flex; align-items: center; gap: 6px; background: #fff; color: #222; font-size: 11.5px; font-weight: 700; padding: 2px 9px 2px 7px; border-radius: 999px; white-space: nowrap; }
+.badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; }
+.badge.good::before { background: #16a34a; } .badge.warn::before { background: #f59e0b; } .badge.crit::before { background: #dc2626; }
+nav.tabs .more-tab { display: none; }
+nav.tabs.show-more .more-tab { display: inline-block; }
+nav.tabs button.more-btn { margin-left: auto; border: 1px dashed rgba(255,255,255,.45); font-weight: 600; }
+.tool-btn { font: inherit; font-size: 12px; font-weight: 700; color: var(--band); background: var(--surface); border: 1.5px solid var(--band); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.tool-btn[aria-pressed="true"] { background: var(--band); color: #fff; }
+html.present body { zoom: 1.22; }
+.hero { display: grid; grid-template-columns: 170px 1fr; gap: 20px; align-items: center; }
+@media (max-width: 520px) { .hero { grid-template-columns: 1fr; justify-items: start; } }
+.ba { display: grid; gap: 10px; }
+.ba .row { display: grid; grid-template-columns: 78px 1fr; gap: 10px; align-items: center; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.ba .track { position: relative; height: 30px; }
+.ba .bar { height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: #fff; font-weight: 700; font-size: 14px; white-space: nowrap; min-width: 64px; }
+.ba .gain { font-size: 22px; font-weight: 700; color: var(--title); }
+.ba .gain small { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.scen-switch { display: flex; gap: 10px; flex-wrap: wrap; }
+.scen-switch button { flex: 1 1 200px; font: inherit; text-align: left; font-weight: 700; font-size: 15px; padding: 10px 14px; border-radius: 6px; border: 2px solid var(--band); background: var(--surface); color: var(--band); cursor: pointer; }
+.scen-switch button small { display: block; font-weight: 500; font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.scen-switch button[aria-pressed="true"] { background: var(--band); color: #fff; }
+.scen-switch button[aria-pressed="true"] small { color: var(--band-soft); }
+.ctl.off { opacity: .4; }
+.view-all { font: inherit; font-weight: 700; color: var(--band); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.callout { font-size: 14px; font-weight: 700; color: var(--title); }
+tr.lean td { font-weight: 700; color: var(--title); }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <h1>Shirwal Lead-Time Control Tower</h1>
+        <span class="sub">ACG Engineering, Shirwal · granulation and coating lines · Team FastTrack prototype</span>
+      </div>
+      <div class="right-brand"><button class="tool-btn" id="present-btn" aria-pressed="false" title="Enlarge everything for a projector">Present mode</button><span class="flag" title="All figures are illustrative assumptions until Shirwal data is connected">Illustrative data · not ACG figures</span><img class="lockup" src="data:image/png;base64,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" alt="ACG"></div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Control tower views">
+      <img class="tab-logo" src="data:image/png;base64,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" alt="ACG">
+      <button role="tab" id="t-overview" data-tab="overview">Overview</button>
+      <button role="tab" id="t-configure" data-tab="configure">Configure an order</button>
+      <button role="tab" id="t-finance" data-tab="finance">Business case</button>
+      <button role="tab" id="t-gate" data-tab="gate">Roadmap &amp; gate</button>
+      <button role="tab" class="more-tab" id="t-orders" data-tab="orders">Orders</button>
+      <button role="tab" class="more-tab" id="t-prestage" data-tab="prestage">Pre-built kits &amp; parts</button>
+      <button role="tab" class="more-tab" id="t-validation" data-tab="validation">Validation</button>
+      <button role="tab" class="more-tab" id="t-impact" data-tab="impact">Impact what-if</button>
+      <button type="button" class="more-btn" id="more-btn" aria-expanded="false">More views ▾</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- OVERVIEW -->
+<section class="panel" id="p-overview" role="tabpanel" aria-labelledby="t-overview">
+  <div class="panel-head">
+    <h2>Plant at a glance, month 12 of the Year 1 pilot</h2>
+    <p>Order-to-dispatch on catalog orders is the primary KPI. Everything else here explains why it moved.</p>
+  </div>
+  <div class="headline" id="hl-overview"></div>
+  <div class="kpis" id="ov-kpis"></div>
+  <div class="grid-2">
+    <div class="box">
+      <div class="box-head"><h3>Weeks from order to dispatch, catalog orders</h3><span class="note">pilot vs baseline · green band = Year 1 target</span></div>
+      <div id="ov-trend"></div>
+      <div class="legend"><span><i style="background:var(--ink-3)"></i>Baseline (20 weeks)</span><span><i style="background:var(--l1)"></i>Pilot actual</span><span><i style="background:var(--good);opacity:.35"></i>Year 1 target (10-15% faster)</span></div>
+    </div>
+    <div class="box">
+      <div class="box-head"><h3>Where open orders are stuck today</h3><span class="note">open orders by binding stage</span></div>
+      <p class="callout" id="ov-bn-call"></p>
+      <div id="ov-bottleneck"></div>
+      <p class="note">The bottleneck floats: it sits in a different stage for different orders, which is why three levers run together.</p>
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-head"><h3>Early warnings</h3><span class="note">top 5 orders forecast to slip, worst first</span></div>
+    <div class="tbl"><table id="ov-alerts"></table></div>
+    <button class="view-all" id="ov-viewall" type="button"></button>
+  </div>
+</section>
+
+<!-- CONFIGURE -->
+<section class="panel" id="p-configure" role="tabpanel" aria-labelledby="t-configure" hidden>
+  <div class="panel-head">
+    <h2>Configure an order and see its lane, pre-staged share and lead time</h2>
+    <p>Pick a Shirwal machine and its options. The tower sorts it into a lane, shows how much is ready before the order, and assembles the IQ/OQ package from pre-approved modules.</p>
+  </div>
+  <div class="headline" id="hl-configure"></div>
+  <div class="grid-2">
+    <div class="box">
+      <h3>Order</h3>
+      <div class="controls">
+        <div class="ctl"><label for="cf-family">Machine family</label><select id="cf-family"></select></div>
+        <div class="ctl"><label for="cf-size">Size</label><select id="cf-size"></select></div>
+        <div id="cf-options" class="controls"></div>
+        <label class="toggle" for="cf-fat"><input type="checkbox" id="cf-fat" checked> Customer QA accepts leveraged FAT</label>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head"><h3>Result</h3><span id="cf-lane"></span></div>
+      <div class="hero" id="cf-hero"></div>
+      <div class="stat-row" id="cf-stats"></div>
+      <div id="cf-gantt"></div>
+      <div class="legend" id="cf-legend"></div>
+      <p class="note" id="cf-why"></p>
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-head"><h3>Auto-assembled IQ/OQ package</h3><span class="note" id="cf-docnote"></span></div>
+    <ul class="modlist" id="cf-mods"></ul>
+    <p class="note">Hardware is pre-staged; paperwork is generated per customer and qualified against the customer's own requirement specification. PQ stays with the customer.</p>
+  </div>
+</section>
+
+<!-- ORDERS -->
+<section class="panel" id="p-orders" role="tabpanel" aria-labelledby="t-orders" hidden>
+  <div class="panel-head">
+    <h2>Open orders across the six stages</h2>
+    <div class="seg" id="or-filter" role="group" aria-label="Filter by lane">
+      <button aria-pressed="true" data-lane="all">All</button>
+      <button aria-pressed="false" data-lane="Catalog">Catalog</button>
+      <button aria-pressed="false" data-lane="Controlled">Controlled</button>
+      <button aria-pressed="false" data-lane="Bespoke">Bespoke</button>
+    </div>
+  </div>
+  <div class="headline" id="hl-orders"></div>
+  <div class="box">
+    <div class="tbl"><table id="or-table"></table></div>
+    <p class="note">Stage bar: design · sourcing · fabrication · assembly · automation · FAT and dispatch. Changes after freeze carry a priced lead-time penalty.</p>
+  </div>
+</section>
+
+<!-- PRESTAGE -->
+<section class="panel" id="p-prestage" role="tabpanel" aria-labelledby="t-prestage" hidden>
+  <div class="panel-head">
+    <h2>Pre-staged kits and pooled long-lead parts</h2>
+    <p>Kits are held unfinished so any customer can take them. A kit older than 90 days triggers the redeploy review.</p>
+  </div>
+  <div class="headline" id="hl-prestage"></div>
+  <div class="kpis" id="ps-kpis"></div>
+  <div class="box">
+    <div class="box-head"><h3>Kit inventory against the working-capital ceiling</h3><span class="note" id="ps-ceiling-note"></span></div>
+    <div id="ps-ceiling"></div>
+    <div class="tbl"><table id="ps-kits"></table></div>
+  </div>
+  <div class="box">
+    <div class="box-head"><h3>Pooled long-lead parts</h3><span class="note">one stock serves many sizes</span></div>
+    <div class="tbl"><table id="ps-parts"></table></div>
+  </div>
+</section>
+
+<!-- VALIDATION -->
+<section class="panel" id="p-validation" role="tabpanel" aria-labelledby="t-validation" hidden>
+  <div class="panel-head">
+    <h2>Validation: standard machine, customer-specific paperwork</h2>
+    <p>The validation engine and leveraged FAT shorten the back end. PQ at the customer site is never compressed.</p>
+  </div>
+  <div class="headline" id="hl-validation"></div>
+  <div class="kpis" id="va-kpis"></div>
+  <div class="grid-2">
+    <div class="box">
+      <div class="box-head"><h3>FAT first-pass yield</h3><span class="note">% of FATs passed first time, pilot months</span></div>
+      <div id="va-fpy"></div>
+    </div>
+    <div class="box">
+      <div class="box-head"><h3>SAT duration, last 8 orders</h3><span class="note">working days</span></div>
+      <div id="va-sat"></div>
+      <div class="legend"><span><i style="background:var(--l1)"></i>Leveraged FAT accepted</span><span><i style="background:var(--zb)"></i>Full SAT</span></div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-head"><h3>Pre-approved script coverage by family</h3><span class="note">share of IQ/OQ modules already approved</span></div>
+    <div id="va-cov"></div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section class="panel" id="p-impact" role="tabpanel" aria-labelledby="t-impact" hidden>
+  <div class="panel-head">
+    <h2>Impact what-if: lanes to internal lead time to order-to-delivery</h2>
+    <p>Move the assumptions and watch the headline. The PQ floor never moves.</p>
+  </div>
+  <div class="headline" id="hl-impact"></div>
+  <div class="grid-2">
+    <div class="box">
+      <h3>Assumptions</h3>
+      <div class="controls">
+        <div class="ctl"><label for="im-mixcat">Catalog share of orders <output id="o-mixcat"></output></label><input type="range" id="im-mixcat" min="5" max="50" step="1" value="20"></div>
+        <div class="ctl"><label for="im-mixbes">Bespoke share of orders <output id="o-mixbes"></output></label><input type="range" id="im-mixbes" min="0" max="40" step="1" value="15"></div>
+        <div class="ctl"><label for="im-ccat">Catalog lane compression <output id="o-ccat"></output></label><input type="range" id="im-ccat" min="30" max="70" step="1" value="60"></div>
+        <div class="ctl"><label for="im-ccon">Controlled lane compression <output id="o-ccon"></output></label><input type="range" id="im-ccon" min="15" max="55" step="1" value="40"></div>
+        <div class="ctl"><label for="im-cbes">Bespoke lane compression <output id="o-cbes"></output></label><input type="range" id="im-cbes" min="0" max="20" step="1" value="8"></div>
+        <div class="ctl"><label for="im-zb">Customer-site testing compression <output id="o-zb"></output></label><input type="range" id="im-zb" min="0" max="60" step="1" value="40"></div>
+        <div class="ctl"><label for="im-acc">Customers accepting leveraged FAT <output id="o-acc"></output></label><input type="range" id="im-acc" min="0" max="100" step="5" value="50"></div>
+      </div>
+      <p class="note">Order time split: ACG-internal 60%, customer-site testing 25%, PQ 15%. Default FAT acceptance of 50% is close to an industry survey where 56% of 140 firms already run remote FATs (ECA Academy).</p>
+    </div>
+    <div class="box">
+      <h3>Result</h3>
+      <div class="stat-row" id="im-stats"></div>
+      <div id="im-zones"></div>
+      <div class="legend"><span><i style="background:var(--l1)"></i>ACG-internal (Zone A)</span><span><i style="background:var(--zb)"></i>Customer-site testing (Zone B)</span><span><i style="background:var(--zc);outline:1px solid var(--ink-3);outline-offset:-1px"></i>PQ floor (Zone C)</span></div>
+      <p class="note" id="im-must"></p>
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-head"><h3>Sensitivity</h3><span class="note">recomputed from your settings</span></div>
+    <div class="tbl"><table id="im-sens"></table></div>
+  </div>
+</section>
+
+<!-- FINANCE -->
+<section class="panel" id="p-finance" role="tabpanel" aria-labelledby="t-finance" hidden>
+  <div class="panel-head">
+    <h2>Business case: shorter lead time pays back as growth</h2>
+    <p>The full plan pays back as growth. The ₹3.8 Cr core pays back without it, and the Year 1 gate decides whether the ₹5.0 Cr growth module is spent.</p>
+  </div>
+  <div class="headline" id="hl-finance"></div>
+  <div class="scen-switch" id="fi-mode" role="group" aria-label="Plan scope">
+    <button type="button" data-mode="full" aria-pressed="true">Full plan<small>₹8.8 Cr · extra orders won (adjust below)</small></button>
+    <button type="button" data-mode="lean" aria-pressed="false">Lean core only<small>₹3.8 Cr · no kits, no extra orders</small></button>
+    <button type="button" data-mode="none" aria-pressed="false">Full plan, no extra orders<small>what the Year 1 gate prevents</small></button>
+  </div>
+  <div class="kpis" id="fi-kpis"></div>
+  <div class="grid-2">
+    <div class="box">
+      <h3>Inputs</h3>
+      <div class="controls">
+        <div class="ctl"><label for="fi-orders">Machines dispatched a year <output id="o-orders"></output></label><input type="range" id="fi-orders" min="40" max="120" step="1" value="75"></div>
+        <div class="ctl"><label for="fi-aov">Average order value <output id="o-aov"></output></label><input type="range" id="fi-aov" min="1" max="4" step="0.25" value="2"></div>
+        <div class="ctl"><label for="fi-cm">Contribution on extra machines <output id="o-cm"></output></label><input type="range" id="fi-cm" min="20" max="40" step="1" value="30"></div>
+        <div class="ctl"><label for="fi-comp">Internal compression <output id="o-comp"></output></label><input type="range" id="fi-comp" min="15" max="50" step="1" value="30"></div>
+        <div class="ctl"><label for="fi-vol">Extra machines won by shorter lead time <output id="o-vol"></output></label><input type="range" id="fi-vol" min="0" max="15" step="0.5" value="8"></div>
+        <div class="ctl"><label for="fi-kits">Pre-stage kits held <output id="o-kits"></output></label><input type="range" id="fi-kits" min="0" max="14" step="1" value="8"></div>
+        <div class="ctl"><label for="fi-r">Discount rate <output id="o-r"></output></label><input type="range" id="fi-r" min="8" max="16" step="1" value="12"></div>
+      </div>
+      <p class="note">Fixed: cost of goods 70%, 20-week cycle today, WIP at 50% of cost during build, rework 3% of cost cut by 25%, 25% of orders late with a 2% penalty halved, kits ₹0.59 Cr each, benefit ramp 10/40/80/100/100%. Why extra volume is plausible: industrial buyers rank availability and lead time first when shortlisting suppliers (Thomasnet 2021, 400+ buyers). Peak-year spend sits inside ACG Pam's regular ₹10-15 Cr annual capex (CARE Ratings, 2023).</p>
+    </div>
+    <div class="box">
+      <div class="box-head"><h3 id="fi-cash-h">Cash flow, Years 1-5</h3><span class="note">₹ Cr · bars net, line cumulative</span></div>
+      <div id="fi-cash"></div>
+      <div class="legend"><span><i style="background:var(--band)"></i>Net cash flow (grey = negative)</span><span><i style="background:var(--ink)"></i>Cumulative</span></div>
+      <h3>Annual benefit at maturity</h3>
+      <div id="fi-ben"></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="box">
+      <h3 id="fi-spend-h">Spend by lever</h3>
+      <div class="tbl"><table id="fi-spend"></table></div>
+    </div>
+    <div class="box">
+      <h3>Scenarios on your inputs</h3>
+      <div class="tbl"><table id="fi-scen"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- GATE -->
+<section class="panel" id="p-gate" role="tabpanel" aria-labelledby="t-gate" hidden>
+  <div class="panel-head">
+    <h2>Three-year roadmap with a data gate before Year 2 money</h2>
+    <p>Prove on coaters in Year 1, invest on a proven baseline in Year 2, scale to granulation trains in Year 3.</p>
+  </div>
+  <div class="headline" id="hl-gate"></div>
+  <div class="box">
+    <div class="road">
+      <div class="col y1"><h3>Year 1 · prove at near-zero capex · ₹0.6 Cr</h3><p class="note">KPI: pilot catalog coater orders 10-15% faster</p><ul>
+        <li>Pull 12 months of order, stage and BOM data</li>
+        <li>BOM commonality study across HSM, FBE/FBC and SMARTCOATER sizes</li>
+        <li>Design-freeze gate with a plant-head sponsor</li>
+        <li>Early POs on pooled long-lead parts</li>
+        <li>Manual finite-capacity board</li>
+        <li>Complete parts kits and first-time-right checks</li>
+        <li>Customer-witnessed FAT pilot with 1-2 lead customers</li>
+        <li>Pilot family: SMARTCOATER</li></ul></div>
+      <div class="col y2"><h3>Year 2 · invest on a proven baseline · ₹5.7 Cr</h3><p class="note">About 10 people, mostly redeployed</p><ul>
+        <li><strong>Core, always (₹2.0 Cr):</strong> finite-capacity scheduling on the ERP; validation library live on coaters by Q4</li>
+        <li><strong>Growth module, only if the gate passes:</strong> pre-built kits for the top 2 sizes; family bays in the expansion shed</li></ul></div>
+      <div class="col y3"><h3>Year 3 · scale · ₹1.7 Cr</h3><ul>
+        <li>Pre-staging extended to GT trains</li>
+        <li>Remote or hybrid FAT where customers accept it</li>
+        <li>55-65% internal compression on catalog orders</li>
+        <li>Blended 30-45% at maturity</li></ul></div>
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-head"><h3>Year 1 go/no-go gate</h3><span id="gt-decision"></span></div>
+    <div class="tbl"><table id="gt-table"></table></div>
+  </div>
+  <div class="grid-2">
+    <div class="box"><h3>Success factors</h3><ul class="checks">
+      <li>Cross-functional team across design, procurement, production, QA and controls</li>
+      <li>Plant-head sponsor who enforces the design-freeze gate</li>
+      <li>One pilot family before any scale-up</li>
+      <li>Customer QA engaged early on the FAT protocol</li></ul></div>
+    <div class="box"><h3>Backup triggers watched by this tower</h3><ul class="checks">
+      <li>Kit older than 90 days: redeploy review</li>
+      <li>Kit value above ceiling: pause pre-stage builds</li>
+      <li>Change after freeze: priced delta and sponsor sign-off</li>
+      <li>Leveraged FAT refused: full SAT, impact re-forecast</li></ul></div>
+  </div>
+</section>
+
+</main>
+<footer class="wrap">Prototype for ACG Pack A Pitch 2.0 by Team FastTrack, IIM Mumbai. Machine families and features follow ACG's published product pages; all plant figures, orders, kits and money are illustrative assumptions to be replaced by Shirwal data.</footer>
+<div id="tip" hidden></div>
+
+<script>
+(function () {
+"use strict";
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const pct = (v, d) => (v * 100).toFixed(d || 0) + "%";
+const cr = (v, d) => (v < 0 ? "−" : "") + "₹" + Math.abs(v).toFixed(d === undefined ? 1 : d) + " Cr";
+const STAGES = ["Design", "Sourcing", "Fabrication", "Assembly", "Automation", "FAT & dispatch"];
+const STVAR = ["--st1", "--st2", "--st3", "--st4", "--st5", "--st6"];
+const LANECLS = { Catalog: "cat", Controlled: "con", Bespoke: "bes" };
+const laneChip = l => `<span class="lane ${LANECLS[l]}"><i></i>${l}</span>`;
+const kpiHTML = arr => arr.map(k => `<div class="kpi"><span class="lab"${k.tip ? ` data-tip="${esc(k.tip)}"` : ""}>${k.lab}</span><span class="val">${k.val}</span><span class="ctx">${k.ctx || ""}</span>${(k.tgt || k.st) ? `<div class="foot"><span class="tgt">${k.tgt || ""}</span>${k.st ? `<span class="badge ${k.st[0]}">${k.st[1]}</span>` : ""}</div>` : ""}</div>`).join("");
+const setHL = (id, html) => { const el = $("#hl-" + id); if (el) el.innerHTML = `<span class="tag-hl">At a glance</span><span>${html}</span>`; };
+
+/* ---------- tooltip ---------- */
+const tip = $("#tip");
+function showTip(t, x, y) {
+  tip.innerHTML = t.split("|").map(esc).join("<br>");
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let left = x + 14, top = y + 14;
+  if (left + w > window.innerWidth - 8) left = x - w - 14;
+  if (top + h > window.innerHeight - 8) top = y - h - 14;
+  tip.style.left = Math.max(8, left) + "px"; tip.style.top = Math.max(8, top) + "px";
+}
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest && e.target.closest("[data-tip]");
+  if (!t) { tip.hidden = true; return; }
+  showTip(t.getAttribute("data-tip"), e.clientX, e.clientY);
+});
+document.addEventListener("pointerdown", e => {
+  const t = e.target.closest && e.target.closest("[data-tip]");
+  if (t) showTip(t.getAttribute("data-tip"), e.clientX, e.clientY); else tip.hidden = true;
+});
+document.addEventListener("scroll", () => { tip.hidden = true; }, true);
+
+/* ---------- chart helpers ---------- */
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
+
+function lineChart(el, o) {
+  const W = 640, H = 240, m = { l: 40, r: 56, t: 14, b: 30 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, n = o.x.length;
+  const x = i => m.l + (n === 1 ? iw / 2 : i * iw / (n - 1));
+  const y = v => m.t + ih - (v - o.min) / (o.max - o.min) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label)}">`;
+  o.ticks.forEach(t => {
+    s += `<line x1="${m.l}" x2="${m.l + iw}" y1="${y(t)}" y2="${y(t)}" style="stroke:var(--line)" stroke-width="1"/>`;
+    s += `<text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" style="fill:var(--ink-3)">${o.fmt(t)}</text>`;
+  });
+  if (o.band) { s += `<rect x="${m.l}" y="${y(o.band.to)}" width="${iw}" height="${y(o.band.from) - y(o.band.to)}" style="fill:var(--good);opacity:.16"/><text x="${m.l + 6}" y="${y(o.band.to) - 4}" font-size="11" font-weight="600" style="fill:var(--good-ink)">${esc(o.band.label)}</text>`; }
+  if (o.vline) { s += `<line x1="${x(o.vline.i)}" x2="${x(o.vline.i)}" y1="${m.t}" y2="${m.t + ih}" style="stroke:var(--band)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${x(o.vline.i) - 6}" y="${m.t + 12}" text-anchor="end" font-size="11" font-weight="700" style="fill:var(--band)">${esc(o.vline.label)}</text>`; }
+  o.x.forEach((lab, i) => { if (i % (o.every || 1) === 0 || i === n - 1) s += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="11" style="fill:var(--ink-3)">${esc(lab)}</text>`; });
+  o.series.forEach(se => {
+    const d = se.values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+    if (se.area) s += `<path d="${d}L${x(n - 1)},${m.t + ih}L${x(0)},${m.t + ih}Z" style="fill:var(${se.color});opacity:.1"/>`;
+    s += `<path d="${d}" fill="none" style="stroke:var(${se.color})" stroke-width="2" ${se.dash ? 'stroke-dasharray="5 4"' : ""} stroke-linejoin="round" stroke-linecap="round"/>`;
+    const li = n - 1, lv = se.values[li];
+    if (!se.dash) s += `<circle cx="${x(li)}" cy="${y(lv)}" r="4.5" style="fill:var(${se.color});stroke:var(--surface)" stroke-width="2"/>`;
+    s += `<text x="${x(li) + 9}" y="${y(lv) + 4}" font-size="12" font-weight="600" style="fill:var(--ink)">${o.fmt(lv)}</text>`;
+  });
+  const step = n > 1 ? iw / (n - 1) : iw;
+  o.x.forEach((lab, i) => {
+    const t = [lab].concat(o.series.map(se => `${se.name}: ${o.fmt(se.values[i])}`)).join("|");
+    s += `<rect x="${x(i) - step / 2}" y="${m.t}" width="${step}" height="${ih}" fill="transparent" data-tip="${esc(t)}"/>`;
+  });
+  el.innerHTML = s + "</svg>";
+}
+
+function barChart(el, o) {
+  const W = 640, H = o.h || 220, m = { l: 36, r: 8, t: 18, b: 34 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, n = o.labels.length;
+  const max = o.max || niceMax(Math.max.apply(null, o.values) || 1);
+  const bw = Math.min(56, iw / n * 0.62), gap = iw / n;
+  const y = v => m.t + ih - v / max * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label)}">`;
+  (o.ticks || [0, max / 2, max]).forEach(t => {
+    s += `<line x1="${m.l}" x2="${m.l + iw}" y1="${y(t)}" y2="${y(t)}" style="stroke:var(--line)"/>`;
+    s += `<text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" style="fill:var(--ink-3)">${o.fmt(t)}</text>`;
+  });
+  o.values.forEach((v, i) => {
+    const cx = m.l + gap * i + gap / 2, h = Math.max(0, m.t + ih - y(v));
+    const col = o.colors ? o.colors[i] : o.color;
+    const r = Math.min(4, h / 2);
+    s += `<path d="M${cx - bw / 2},${m.t + ih}V${m.t + ih - h + r}Q${cx - bw / 2},${m.t + ih - h} ${cx - bw / 2 + r},${m.t + ih - h}H${cx + bw / 2 - r}Q${cx + bw / 2},${m.t + ih - h} ${cx + bw / 2},${m.t + ih - h + r}V${m.t + ih}Z" style="fill:var(${col})" data-tip="${esc(o.labels[i] + ": " + o.fmt(v) + (o.tipExtra ? o.tipExtra[i] : ""))}"/>`;
+    s += `<text x="${cx}" y="${m.t + ih - h - 6}" text-anchor="middle" font-size="12" font-weight="600" style="fill:var(--ink)">${o.fmt(v)}</text>`;
+    s += `<text x="${cx}" y="${H - 12}" text-anchor="middle" font-size="11" style="fill:var(--ink-2)">${esc(o.labels[i])}</text>`;
+  });
+  s += `<line x1="${m.l}" x2="${m.l + iw}" y1="${m.t + ih}" y2="${m.t + ih}" style="stroke:var(--ink-3)"/>`;
+  el.innerHTML = s + "</svg>";
+}
+
+/* horizontal stacked rows (Gantt / zones) */
+function stackRows(el, o) {
+  const W = 640, rowH = 30, m = { l: 92, r: 64, t: 6, b: 26 };
+  const H = m.t + o.rows.length * (rowH + 14) + m.b;
+  const iw = W - m.l - m.r, max = o.max;
+  const x = v => m.l + v / max * iw;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label)}"><defs><pattern id="hatch-${el.id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:var(--zc)"/><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--ink-3)" stroke-width="1.4"/></pattern></defs>`;
+  const tickStep = max > 40 ? 10 : 5;
+  for (let t = 0; t <= max; t += tickStep) {
+    s += `<line x1="${x(t)}" x2="${x(t)}" y1="${m.t}" y2="${H - m.b + 4}" style="stroke:var(--line)"/>`;
+    s += `<text x="${x(t)}" y="${H - 8}" text-anchor="middle" font-size="11" style="fill:var(--ink-3)">${t}${t === 0 ? "" : ""}</text>`;
+  }
+  s += `<text x="${m.l + iw}" y="${H - 8}" text-anchor="end" dx="56" font-size="11" style="fill:var(--ink-3)">weeks</text>`;
+  o.rows.forEach((r, ri) => {
+    const yy = m.t + ri * (rowH + 14);
+    s += `<text x="${m.l - 10}" y="${yy + rowH / 2 + 4}" text-anchor="end" font-size="12" font-weight="600" style="fill:var(--ink)">${esc(r.label)}</text>`;
+    let acc = 0;
+    r.segs.forEach(sg => {
+      if (sg.w <= 0.001) return;
+      const x0 = x(acc), w = Math.max(0.5, x(acc + sg.w) - x0 - 2);
+      const fill = sg.hatch ? `url(#hatch-${el.id})` : `var(${sg.color})`;
+      s += `<rect x="${x0}" y="${yy}" width="${w}" height="${rowH}" rx="2" style="fill:${fill}" data-tip="${esc(r.label + " · " + sg.name + ": " + sg.w.toFixed(1) + " weeks")}"/>`;
+      acc += sg.w;
+    });
+    s += `<text x="${x(acc) + 6}" y="${yy + rowH / 2 + 4}" font-size="12" font-weight="600" style="fill:var(--ink)">${acc.toFixed(1)} wk</text>`;
+  });
+  el.innerHTML = s + "</svg>";
+}
+
+/* horizontal single bars with labels (coverage, benefit) */
+function hBars(el, o) {
+  const W = o.W || 640, rowH = 22, gapY = 10, m = { l: o.left || 170, r: 70, t: 4, b: 4 };
+  const H = m.t + o.items.length * (rowH + gapY) + m.b, iw = W - m.l - m.r;
+  const max = o.max || Math.max.apply(null, o.items.map(i => i.v));
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label)}">`;
+  o.items.forEach((it, i) => {
+    const yy = m.t + i * (rowH + gapY), w = Math.max(1, it.v / max * iw);
+    s += `<text x="${m.l - 10}" y="${yy + rowH / 2 + 4}" text-anchor="end" font-size="12" style="fill:var(--ink-2)">${esc(it.label)}</text>`;
+    s += `<rect x="${m.l}" y="${yy}" width="${iw}" height="${rowH}" rx="2" style="fill:var(--surface-2)"/>`;
+    s += `<rect x="${m.l}" y="${yy}" width="${w}" height="${rowH}" rx="2" style="fill:var(${it.color || "--band"})" data-tip="${esc(it.label + ": " + o.fmt(it.v))}"/>`;
+    s += `<text x="${m.l + w + 6}" y="${yy + rowH / 2 + 4}" font-size="12" font-weight="600" style="fill:var(--ink)">${o.fmt(it.v)}</text>`;
+  });
+  el.innerHTML = s + "</svg>";
+}
+
+/* ---------- data: families and configurator ---------- */
+const FAM = {
+  sc: { name: "SMARTCOATER X•ONE coater", sizes: ["175", "250", "350", "500", "700", "1000", "1400", "2000"].map(v => "SMARTCOATER " + v + " X•ONE"), stocked: ["SMARTCOATER 350 X•ONE", "SMARTCOATER 500 X•ONE"],
+    base: 0.78, weeks: 16, zoneB: 3, split: [.22, .30, .18, .12, .08, .10],
+    mods: [["IQ-SC-01", "Perforated drum, baffles and housing"], ["IQ-SC-02", "Drum drive and spray arm"], ["IQ-CTRL-01", "X•ONE control cabinet, locked base code"], ["OQ-SC-01", "Drum speed and airflow"], ["OQ-SC-02", "Spray pattern and nozzle function"], ["OQ-CTRL-02", "21 CFR Part 11 audit trail and alarms"]],
+    options: [
+      { id: "spray", label: "Spray system", choices: [["Standard spray arm and nozzles", 0], ["Extra nozzles for large batches", 1, "OQ-SC-03"]] },
+      { id: "charge", label: "Charging and discharge", choices: [["Manual charging", 0], ["Automated charging and discharge", 1, "OQ-SC-04"]] },
+      { id: "wash", label: "Cleaning", choices: [["Manual clean", 0], ["Wash-in-place nozzles", 1, "OQ-SC-05"]] },
+      { id: "iface", label: "Site interface", choices: [["Standard exhaust and utilities", 0], ["Customer HVAC or exhaust interface", 2, "IQ-CUST-01"]] },
+      { id: "urs", label: "Customer requirement spec", choices: [["Fits the catalog", 0], ["Non-catalog requirement", 3, "OQ-CUST-01"]] }] },
+  hsm: { name: "HSM X•ONE high shear mixer", sizes: ["150", "300", "400", "600", "800", "1200", "2000"].map(v => "HSM " + v + " X•ONE"), stocked: ["HSM 600 X•ONE", "HSM 800 X•ONE"],
+    base: 0.72, weeks: 18, zoneB: 4, split: [.27, .27, .20, .12, .06, .08],
+    mods: [["IQ-HSM-01", "Bowl shell and lid, 12-bar rated"], ["IQ-HSM-02", "Impeller and chopper drives"], ["IQ-CTRL-01", "X•ONE control cabinet, locked base code"], ["OQ-HSM-01", "Impeller speed and torque end-point"], ["OQ-HSM-02", "MOST 12-bar safety interlocks"], ["OQ-CTRL-02", "21 CFR Part 11 audit trail and alarms"]],
+    options: [
+      { id: "charge", label: "Charging", choices: [["Gravity charging", 0], ["Vacuum charging", 1, "OQ-HSM-03"], ["Customer-specific closed transfer", 2, "IQ-CUST-02"]] },
+      { id: "dis", label: "Discharge", choices: [["Standard discharge valve", 0], ["Direct to wet mill", 1, "OQ-HSM-04"]] },
+      { id: "wash", label: "Cleaning", choices: [["Manual clean", 0], ["Wash-in-place nozzles", 1, "OQ-HSM-05"]] },
+      { id: "iface", label: "Site interface", choices: [["Standard utilities", 0], ["Customer utility or floor interface", 2, "IQ-CUST-01"]] },
+      { id: "urs", label: "Customer requirement spec", choices: [["Fits the catalog", 0], ["Non-catalog requirement", 3, "OQ-CUST-01"]] }] },
+  fbe: { name: "FBE / FBC X•ONE fluid bed", sizes: ["125", "250", "500", "800", "1300", "1800"].map(v => "FBC " + v + " X•ONE"), stocked: ["FBC 500 X•ONE", "FBC 800 X•ONE"],
+    base: 0.70, weeks: 20, zoneB: 4, split: [.26, .27, .22, .11, .06, .08],
+    mods: [["IQ-FB-01", "Product container and expansion chamber"], ["IQ-FB-02", "Filter housing, seals and QASV kit"], ["IQ-FB-03", "Air-handling skid"], ["IQ-CTRL-01", "X•ONE control cabinet, locked base code"], ["OQ-FB-01", "Fluidisation and airflow"], ["OQ-FB-02", "Explosion isolation, QASV response"], ["OQ-CTRL-02", "21 CFR Part 11 audit trail and alarms"]],
+    options: [
+      { id: "proc", label: "Process insert", choices: [["Top-spray granulation", 0], ["Wurster coating insert", 1, "OQ-FB-03"], ["Rotor insert (R-series)", 1, "OQ-FB-04"]] },
+      { id: "plate", label: "Air-distribution plate", choices: [["Standard plate", 0], ["Alternate plate", 1, "IQ-FB-04"]] },
+      { id: "noz", label: "Nozzles", choices: [["Standard nozzle set", 0], ["Extra nozzle set", 1, "OQ-FB-05"]] },
+      { id: "iface", label: "Site interface", choices: [["Standard utilities", 0], ["Customer utility or floor interface", 2, "IQ-CUST-01"]] },
+      { id: "urs", label: "Customer requirement spec", choices: [["Fits the catalog", 0], ["Non-catalog requirement", 3, "OQ-CUST-01"]] }] },
+  gt: { name: "GT X•ONE granulation train", sizes: ["HSM 600 + FBC 500", "HSM 800 + FBC 800", "HSM 1200 + FBC 1300", "GT 1600 (HSM 2000 + FBE 1800)"], stocked: ["HSM 600 + FBC 500", "HSM 800 + FBC 800"],
+    base: 0.66, weeks: 28, zoneB: 6, split: [.28, .27, .18, .12, .07, .08], forceControlled: true,
+    mods: [["IQ-HSM-01", "Mixer module, pre-validated"], ["IQ-FB-01", "Fluid bed module, pre-validated"], ["IQ-GT-01", "Wet and dry mill modules"], ["IQ-CTRL-01", "X•ONE train cabinet, locked base code"], ["OQ-GT-01", "Contained vacuum transfer"], ["OQ-GT-02", "Train sequence and interlocks"], ["OQ-CTRL-02", "21 CFR Part 11 audit trail and alarms"]],
+    options: [
+      { id: "mill", label: "Mills", choices: [["Standard wet and dry mills", 0], ["Customer-specified mill", 2, "IQ-CUST-03"]] },
+      { id: "trans", label: "Transfer route", choices: [["Standard vacuum transfer", 0], ["Extended transfer route", 2, "OQ-CUST-02"]] },
+      { id: "layout", label: "Building layout", choices: [["Standard train layout", 0], ["Multi-floor or custom building interface", 2, "IQ-CUST-04"]] },
+      { id: "urs", label: "Customer requirement spec", choices: [["Fits the catalog", 0], ["Non-catalog requirement", 3, "OQ-CUST-01"]] }] },
+  gtc: { name: "GTC III OEB 5 containment line", sizes: ["GTC III (1.5-10 l)"], stocked: [],
+    base: 0.35, weeks: 34, zoneB: 8, split: [.28, .24, .18, .10, .06, .14], forceBespoke: true,
+    mods: [["IQ-GTC-01", "Isolator shell and glove ports"], ["IQ-GTC-02", "Integrated wet and dry mills"], ["IQ-CTRL-01", "Control cabinet, locked base code"], ["OQ-CUST-10", "Containment performance test, per order"], ["OQ-CUST-11", "HPAPI cleaning verification, per order"]],
+    options: [
+      { id: "port", label: "Material transfer", choices: [["Rapid transfer port", 1, "OQ-GTC-01"], ["Active transfer port", 1, "OQ-GTC-02"], ["Contained poly-bag transfer", 1, "OQ-GTC-03"]] },
+      { id: "urs", label: "Customer requirement spec", choices: [["Containment spec per customer", 3, "OQ-CUST-12"]] }] }
+};
+const K = [0.95, 0.9, 0.75, 0.25, 0.7, 0.45];
+const LANE_M = { Catalog: 1.1, Controlled: 0.85, Bespoke: 0.32 };
+const PQ_WEEKS = 4;
+
+function configure(famKey, size, picks, fatOK) {
+  const f = FAM[famKey];
+  let p = f.base, n1 = 0, n2 = 0, n3 = 0;
+  const optMods = [];
+  f.options.forEach(op => {
+    const c = op.choices[picks[op.id] || 0];
+    if (c[1] === 1) { n1++; p -= 0.03; } else if (c[1] === 2) { n2++; p -= 0.08; } else if (c[1] === 3) { n3++; p -= 0.12; }
+    if (c[1] > 0) optMods.push({ code: c[2], name: op.label + ": " + c[0], kind: c[1] === 1 ? "opt" : "new" });
+  });
+  const stocked = f.stocked.indexOf(size) >= 0;
+  if (!stocked && !f.forceBespoke) p -= 0.10;
+  p = Math.max(0.2, p);
+  if (f.forceBespoke) p = f.base;
+  let lane;
+  if (f.forceBespoke || n3 > 0) lane = "Bespoke";
+  else if (f.forceControlled || n2 > 0 || !stocked) lane = "Controlled";
+  else lane = "Catalog";
+  const today = f.split.map(s => s * f.weeks);
+  const comp = K.map(k => Math.min(0.8, k * p * LANE_M[lane]));
+  const plan = today.map((w, i) => w * (1 - comp[i]));
+  const tIn = today.reduce((a, b) => a + b, 0), pIn = plan.reduce((a, b) => a + b, 0);
+  const zbPlan = f.zoneB * (fatOK && lane !== "Bespoke" ? 0.6 : 1);
+  const mods = f.mods.map(m => ({ code: m[0], name: m[1], kind: m[0].indexOf("CUST") >= 0 ? "new" : "pre" })).concat(optMods);
+  const nNew = mods.filter(m => m.kind === "new").length, nPre = mods.length - nNew;
+  const docDays = 0.5 + nNew * 3 + 0.5;
+  return { f, p, lane, stocked, today, plan, tIn, pIn, comp: 1 - pIn / tIn, zbToday: f.zoneB, zbPlan, mods, nNew, nPre, docDays, n1, n2, n3 };
+}
+
+/* ---------- data: orders ---------- */
+const ORDERS = [
+  ["SH-0412", "Customer 01 · India", "SMARTCOATER 500 X•ONE", "Catalog", 3, "W46", -3, 0],
+  ["SH-0415", "Customer 02 · Europe", "GT train: HSM 800 + FBC 800", "Controlled", 1, "W51", 9, 2],
+  ["SH-0418", "Customer 03 · India", "FBC 500 X•ONE, Wurster insert + custom site interface", "Controlled", 0, "W02", 4, 1],
+  ["SH-0419", "Customer 04 · USA", "GTC III, OEB 5", "Bespoke", 0, "W08", 12, 3],
+  ["SH-0421", "Customer 05 · India", "HSM 600 X•ONE", "Catalog", 2, "W47", -5, 0],
+  ["SH-0423", "Customer 06 · Middle East", "SMARTCOATER 1000 X•ONE", "Controlled", 1, "W50", 2, 0],
+  ["SH-0424", "Customer 07 · India", "FBC 800 X•ONE", "Catalog", 5, "W44", 0, 0],
+  ["SH-0426", "Customer 08 · Africa", "HSM 300 X•ONE", "Controlled", 1, "W52", 6, 1],
+  ["SH-0427", "Customer 09 · India", "GT 1600 (HSM 2000 + FBE 1800)", "Controlled", 0, "W06", 10, 2],
+  ["SH-0429", "Customer 10 · Latin America", "SMARTCOATER 350 X•ONE", "Catalog", 5, "W43", -2, 0],
+  ["SH-0430", "Customer 11 · India", "FBC 250 X•ONE, rotor insert", "Controlled", 2, "W49", 3, 0],
+  ["SH-0432", "Customer 12 · Europe", "HSM 1200 X•ONE", "Controlled", 1, "W01", 8, 1],
+  ["SH-0433", "Customer 13 · India", "SMARTCOATER 500 X•ONE", "Catalog", 1, "W48", 0, 0],
+  ["SH-0435", "Customer 14 · South-East Asia", "FBC 500 X•ONE", "Catalog", 4, "W45", 5, 0]
+].map(r => ({ id: r[0], cust: r[1], machine: r[2], lane: r[3], stage: r[4], due: r[5], slip: r[6], crs: r[7] }));
+function risk(slip) { return slip > 7 ? ["crit", "At risk"] : slip > 0 ? ["warn", "Watch"] : ["good", "On track"]; }
+
+/* ---------- overview ---------- */
+function renderOverview() {
+  const open = ORDERS.length, atRisk = ORDERS.filter(o => o.slip > 7).length, watch = ORDERS.filter(o => o.slip > 0 && o.slip <= 7).length;
+  const crs = ORDERS.reduce((a, o) => a + o.crs, 0), perOrder = crs / open;
+  const kitVal = KITS.reduce((a, k) => a + k[1] * k[4], 0), kitShare = kitVal / CEILING;
+  const counts = STAGES.map((_, i) => ORDERS.filter(o => o.stage === i).length);
+  const top = counts.indexOf(Math.max.apply(null, counts));
+  const delayed = STAGES.map((_, i) => ORDERS.filter(o => o.stage === i && o.slip > 0).length);
+  const topDelay = delayed.indexOf(Math.max.apply(null, delayed));
+  const cur = 17.4, base = 20.0, cut = 1 - cur / base;
+  setHL("overview", `Catalog orders now take <b>${cur} weeks vs ${base.toFixed(0)}</b> (−${pct(cut)}), inside the Year 1 target. <b>${atRisk} orders are at risk</b>, mostly stuck in ${STAGES[topDelay].toLowerCase()}. Pre-built kits hold ${cr(kitVal)}, within the ${cr(CEILING)} ceiling.`);
+  $("#ov-kpis").innerHTML = kpiHTML([
+    { lab: "Weeks, order to dispatch (catalog)", tip: "Calendar time from purchase order to dispatch on catalog-lane orders. The primary KPI (manufacturing critical-path time).", val: cur.toFixed(1) + "<small> wk</small>", ctx: `was ${base.toFixed(1)} wk · −${pct(cut)}`, tgt: "Year 1 target: 17-18 wk", st: cur <= 18 ? ["good", "On track"] : ["warn", "Behind"] },
+    { lab: "Open orders", val: String(open), ctx: `${atRisk} at risk · ${watch} on watch`, tgt: "Target: 0 at risk", st: atRisk === 0 ? ["good", "On track"] : atRisk >= 5 ? ["crit", "Act now"] : ["warn", "Watch"] },
+    { lab: "Delivered on time, in full", tip: "Share of orders delivered on the promised date and complete, last 3 months.", val: "74<small>%</small>", ctx: "last 3 months · was 62%", tgt: "Target: ≥ 70%", st: ["good", "On track"] },
+    { lab: "Pre-built kits held", tip: "Machine cores built before the order, held unfinished so any customer can take them.", val: cr(kitVal), ctx: `${KITS.reduce((a, k) => a + k[1], 0)} kits · ${pct(kitShare)} of ceiling`, tgt: "Ceiling: " + cr(CEILING), st: kitShare > 0.9 ? ["crit", "Near ceiling"] : kitShare > 0.8 ? ["warn", "Watch"] : ["good", "Healthy"] },
+    { lab: "Days to first purchase order", tip: "Days from customer order to the first purchase order for long-lead parts.", val: "3<small> days</small>", ctx: "was 21 days", tgt: "Target: ≤ 5 days", st: ["good", "On track"] },
+    { lab: "Design changes after freeze", val: perOrder.toFixed(1) + "<small> per order</small>", ctx: `${crs} across ${open} open orders · 12-month avg 1.4`, tgt: "Target: < 1.0", st: perOrder < 1 ? ["warn", "Improving"] : ["crit", "Act now"] }
+  ]);
+  const months = Array.from({ length: 12 }, (_, i) => "M" + (i + 1));
+  lineChart($("#ov-trend"), { label: "Weeks from order to dispatch, catalog orders", x: months, min: 10, max: 22, ticks: [10, 14, 18, 22], fmt: v => v.toFixed(1), every: 1,
+    band: { from: 17, to: 18, label: "Year 1 target 17-18 wk" }, vline: { i: 11, label: "Year 1 gate" },
+    series: [{ name: "Baseline", color: "--ink-3", dash: true, values: months.map(() => base) },
+             { name: "Pilot actual", color: "--l1", area: true, values: [20.4, 20.2, 20.0, 20.1, 19.7, 19.3, 18.9, 18.5, 18.2, 17.9, 17.6, cur] }] });
+  $("#ov-bn-call").textContent = `${STAGES[top]} is today's bottleneck: ${counts[top]} of ${open} open orders are waiting there.`;
+  barChart($("#ov-bottleneck"), { label: "Open orders by binding stage", labels: ["Design", "Sourcing", "Fabrication", "Assembly", "Automation", "FAT"], values: counts, colors: counts.map((_, i) => i === top ? "--l1" : "--zb"), fmt: v => String(Math.round(v)), max: 6, ticks: [0, 2, 4, 6] });
+  const alerts = ORDERS.filter(o => o.slip > 0).sort((a, b) => b.slip - a.slip);
+  $("#ov-alerts").innerHTML = `<thead><tr><th>Order</th><th>Machine</th><th>Lane</th><th>Stuck in</th><th class="r">Forecast delay</th><th>Status</th></tr></thead><tbody>` +
+    alerts.slice(0, 5).map(o => { const r = risk(o.slip); return `<tr><td class="mono">${o.id}</td><td>${esc(o.machine)}</td><td>${laneChip(o.lane)}</td><td>${STAGES[o.stage]}</td><td class="r num">+${o.slip} days</td><td><span class="chip ${r[0]}"><span class="dot"></span>${r[1]}</span></td></tr>`; }).join("") + "</tbody>";
+  $("#ov-viewall").textContent = `View all ${open} open orders →`;
+}
+
+/* ---------- configurator ---------- */
+const famSel = $("#cf-family"), sizeSel = $("#cf-size"), optBox = $("#cf-options"), fatBox = $("#cf-fat");
+famSel.innerHTML = Object.keys(FAM).map(k => `<option value="${k}">${esc(FAM[k].name)}</option>`).join("");
+function buildConfigControls() {
+  const f = FAM[famSel.value];
+  sizeSel.innerHTML = f.sizes.map(s => `<option>${esc(s)}${f.stocked.indexOf(s) >= 0 ? " · kit in stock" : ""}</option>`).join("");
+  const def = f.stocked[0] ? f.sizes.indexOf(f.stocked[0]) : 0;
+  sizeSel.selectedIndex = Math.max(0, def);
+  optBox.innerHTML = f.options.map(op => `<div class="ctl"><label for="cf-o-${op.id}">${esc(op.label)}</label><select id="cf-o-${op.id}" data-opt="${op.id}">` +
+    op.choices.map((c, i) => `<option value="${i}">${esc(c[0])}${c[1] === 1 ? " (catalog option)" : c[1] === 2 ? " (custom)" : c[1] === 3 ? " (bespoke)" : ""}</option>`).join("") + "</select></div>").join("");
+  renderConfig();
+}
+function renderConfig() {
+  const f = FAM[famSel.value];
+  const size = f.sizes[sizeSel.selectedIndex];
+  const picks = {};
+  $$("[data-opt]", optBox).forEach(s => { picks[s.getAttribute("data-opt")] = +s.value; });
+  const r = configure(famSel.value, size, picks, fatBox.checked);
+  $("#cf-lane").innerHTML = laneChip(r.lane);
+  const odToday = r.tIn + r.zbToday + PQ_WEEKS, odPlan = r.pIn + r.zbPlan + PQ_WEEKS;
+  const C = 2 * Math.PI * 62, dash = (C * r.p).toFixed(1);
+  const ring = `<svg viewBox="0 0 170 170" role="img" aria-label="${pct(r.p)} ready before order" style="width:170px"><circle cx="85" cy="85" r="62" fill="none" style="stroke:var(--surface-2)" stroke-width="18"/><circle cx="85" cy="85" r="62" fill="none" style="stroke:var(--bar)" stroke-width="18" stroke-dasharray="${dash} ${C.toFixed(1)}" transform="rotate(-90 85 85)" stroke-linecap="butt"/><text x="85" y="86" text-anchor="middle" font-size="32" font-weight="700" style="fill:var(--ink);font-family:Arial, sans-serif">${pct(r.p)}</text><text x="85" y="104" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--ink-2);font-family:Arial, sans-serif">ready before</text><text x="85" y="117" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--ink-2);font-family:Arial, sans-serif">the order</text></svg>`;
+  const wPlan = Math.max(18, r.pIn / r.tIn * 100);
+  $("#cf-hero").innerHTML = ring + `<div class="ba"><div class="row"><span>Today</span><div class="track"><div class="bar" style="width:100%;background:var(--zb)">${r.tIn.toFixed(1)} wk</div></div></div><div class="row"><span>With plan</span><div class="track"><div class="bar" style="width:${wPlan.toFixed(1)}%;background:var(--bar)">${r.pIn.toFixed(1)} wk</div></div></div><div class="gain">${pct(r.comp)} faster <small>internal lead time, order to dispatch</small></div></div>`;
+  $("#cf-stats").innerHTML = [["Customer's order-to-delivery", `${odToday.toFixed(1)} → ${odPlan.toFixed(1)} wk`], ["Paperwork prep", `${r.docDays.toFixed(1)} days (was 20)`]]
+    .map(s => `<div><span class="lab">${s[0]}</span><span class="v">${s[1]}</span></div>`).join("");
+  setHL("configure", `<b>${esc(size)}</b>${Object.keys(picks).length ? " with these options" : ""} lands in the <b>${r.lane} lane</b>: ${pct(r.p)} of the machine is ready before the order, so internal lead time drops from ${r.tIn.toFixed(1)} to <b>${r.pIn.toFixed(1)} weeks</b>.`);
+  const segs = arr => arr.map((w, i) => ({ name: STAGES[i], w, color: STVAR[i] }));
+  stackRows($("#cf-gantt"), { label: "Lead time by stage, today vs with plan", max: Math.ceil((odToday + 2) / 5) * 5,
+    rows: [{ label: "Today", segs: segs(r.today).concat([{ name: "Customer-site testing", w: r.zbToday, color: "--zb" }, { name: "PQ (customer-owned)", w: PQ_WEEKS, hatch: true }]) },
+           { label: "With plan", segs: segs(r.plan).concat([{ name: "Customer-site testing", w: r.zbPlan, color: "--zb" }, { name: "PQ (customer-owned)", w: PQ_WEEKS, hatch: true }]) }] });
+  $("#cf-legend").innerHTML = STAGES.map((s, i) => `<span><i style="background:var(${STVAR[i]})"></i>${s}</span>`).join("") + `<span><i style="background:var(--zb)"></i>Customer-site testing</span><span><i style="background:var(--zc);outline:1px solid var(--ink-3);outline-offset:-1px"></i>PQ floor</span>`;
+  const why = [];
+  if (r.lane === "Catalog") why.push("Stocked size with catalog options only, so the core kit ships from pre-stage.");
+  if (!r.stocked && !f.forceBespoke) why.push("This size has no kit in stock, so the core is fabricated after the order.");
+  if (r.n2) why.push(`${r.n2} custom item${r.n2 > 1 ? "s" : ""} need order-specific engineering.`);
+  if (r.n3 || f.forceBespoke) why.push("Bespoke lane: containment or non-catalog requirements are engineered and validated per order.");
+  if (f.forceControlled && !r.n2 && !r.n3) why.push("Trains always need order-specific layout and transfer engineering, so they run in the controlled lane.");
+  $("#cf-why").textContent = why.join(" ");
+  $("#cf-docnote").textContent = `${r.nPre} pre-approved · ${r.nNew} new · prep about ${r.docDays.toFixed(1)} days vs 20 days by hand`;
+  $("#cf-mods").innerHTML = r.mods.map(m => `<li><code>${esc(m.code)}</code><span>${esc(m.name)}</span><span class="tag ${m.kind}">${m.kind === "pre" ? "pre-approved" : m.kind === "opt" ? "option module" : "new, per order"}</span></li>`).join("");
+}
+famSel.addEventListener("change", buildConfigControls);
+sizeSel.addEventListener("change", renderConfig);
+optBox.addEventListener("change", renderConfig);
+fatBox.addEventListener("change", renderConfig);
+
+/* ---------- orders ---------- */
+let laneFilter = "all";
+function renderOrders() {
+  const rows = ORDERS.filter(o => laneFilter === "all" || o.lane === laneFilter);
+  { const ar = rows.filter(o => o.slip > 7).length, wa = rows.filter(o => o.slip > 0 && o.slip <= 7).length;
+    const d = STAGES.map((_, i) => rows.filter(o => o.stage === i && o.slip > 0).length), t = d.indexOf(Math.max.apply(null, d));
+    setHL("orders", `<b>${rows.length} open ${laneFilter === "all" ? "" : laneFilter.toLowerCase() + " "}orders</b>: ${ar} at risk, ${wa} on watch. Most delays sit in <b>${STAGES[t].toLowerCase()}</b>.`); }
+  $("#or-table").innerHTML = `<thead><tr><th>Order</th><th>Customer</th><th>Machine</th><th>Lane</th><th>Progress</th><th>Binding stage</th><th>Due</th><th class="r">Forecast slip</th><th class="r">Changes after freeze</th><th>Status</th></tr></thead><tbody>` +
+    rows.map(o => { const r = risk(o.slip);
+      const prog = STAGES.map((s, i) => `<span class="${i < o.stage ? "done" : i === o.stage ? "now" : ""}" data-tip="${esc(s + (i < o.stage ? ": done" : i === o.stage ? ": in progress" : ": not started"))}"></span>`).join("");
+      return `<tr><td class="mono">${o.id}</td><td>${esc(o.cust)}</td><td>${esc(o.machine)}</td><td>${laneChip(o.lane)}</td><td><div class="prog">${prog}</div></td><td>${STAGES[o.stage]}</td><td class="mono">${o.due}</td><td class="r num">${o.slip > 0 ? "+" : ""}${o.slip} d</td><td class="r num">${o.crs}${o.crs ? ` <span class="note">(+${o.crs * 4}-${o.crs * 8} wk priced)</span>` : ""}</td><td><span class="chip ${r[0]}"><span class="dot"></span>${r[1]}</span></td></tr>`; }).join("") + "</tbody>";
+}
+$("#or-filter").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  laneFilter = b.getAttribute("data-lane");
+  $$("#or-filter button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  renderOrders();
+});
+
+/* ---------- pre-stage & parts ---------- */
+const KITS = [
+  ["SMARTCOATER 350 core: drum, baffles, spray arm, housing", 2, 2, [34, 71], 0.43],
+  ["SMARTCOATER 500 core: drum, baffles, spray arm, housing", 2, 2, [12, 96], 0.55],
+  ["HSM 600 core: bowl shell, lid, drives, frame", 1, 2, [48], 0.62],
+  ["HSM 800 core: bowl shell, lid, drives, frame", 1, 1, [22], 0.70],
+  ["FBC 500 core: container, expansion chamber, filter housing", 1, 1, [101], 0.66],
+  ["FBC 800 core: container, expansion chamber, filter housing", 1, 1, [15], 0.78]
+];
+const PARTS = [
+  ["Impeller and chopper drive set", "HSM, GT", 4, 3, 14, 0.88],
+  ["Coater drum drive", "SMARTCOATER", 3, 4, 12, 0.92],
+  ["Quick Action Stop Valves", "FBE/FBC, GT", 6, 4, 16, 0.81],
+  ["Inflatable seal kits, 12-bar", "HSM, FBE/FBC, GT", 10, 7, 10, 0.90],
+  ["Spray nozzles (imported, Düsen-Schlick)", "SMARTCOATER, FBC", 12, 16, 18, 0.76],
+  ["PLC/HMI for X•ONE cabinet", "All families", 5, 6, 12, 0.85],
+  ["Filter bag sets", "FBE/FBC, GT", 8, 5, 6, 0.95],
+  ["316L plate (tonnes)", "All families", 14, 11, 8, 0.93]
+];
+const CEILING = 5.5;
+function renderPrestage() {
+  let total = 0, kits = 0, aged = 0;
+  const rows = KITS.map(k => { const v = k[1] * k[4]; total += v; kits += k[1]; const maxAge = Math.max.apply(null, k[3]); if (maxAge > 90) aged++;
+    const st = maxAge > 90 ? ["crit", "Redeploy review"] : maxAge > 60 ? ["warn", "Ageing"] : ["good", "Healthy"];
+    return `<tr><td>${esc(k[0])}</td><td class="r num">${k[1]} / ${k[2]}</td><td class="r num">${k[3].join(", ")}</td><td class="r num">${cr(v, 2)}</td><td><span class="chip ${st[0]}"><span class="dot"></span>${st[1]}</span></td></tr>`; });
+  const shortParts = PARTS.filter(p => p[2] < p[3]).length;
+  const share = total / CEILING;
+  $("#ps-kpis").innerHTML = kpiHTML([
+    { lab: "Pre-built kits on hand", val: String(kits), ctx: "top 2 sizes per family", tgt: "Built only by the 45% rule" },
+    { lab: "Kit value", val: cr(total, 2), ctx: `${pct(share)} of the ${cr(CEILING)} ceiling`, tgt: "Ceiling: " + cr(CEILING), st: share > 0.9 ? ["crit", "Near ceiling"] : share > 0.8 ? ["warn", "Watch"] : ["good", "Healthy"] },
+    { lab: "Kits older than 90 days", val: String(aged), ctx: "redeploy to lab, demo or spares", tgt: "Target: 0", st: aged ? ["crit", "Act now"] : ["good", "Clear"] },
+    { lab: "Pooled parts short", val: String(shortParts), ctx: "vs next 8 weeks of need", tgt: "Target: 0", st: shortParts ? ["warn", "Expedite"] : ["good", "Covered"] },
+    { lab: "Days to first purchase order", val: "3<small> days</small>", ctx: "was 21 days", tgt: "Target: ≤ 5 days", st: ["good", "On track"] }
+  ]);
+  setHL("prestage", `<b>${kits} pre-built kits</b> worth ${cr(total, 2)} use ${pct(share)} of the ceiling. <b>${aged} kits are over 90 days</b> and go to redeploy review; ${shortParts} pooled parts need expediting.`);
+  hBars($("#ps-ceiling"), { label: "Kit value vs ceiling", W: 1180, left: 130, max: CEILING * 1.1, fmt: v => cr(v, 2), items: [{ label: "Kits held", v: total, color: "--l1" }, { label: "Ceiling", v: CEILING, color: "--zb" }] });
+  $("#ps-ceiling-note").textContent = `${Math.round(total / CEILING * 100)}% of ceiling used`;
+  $("#ps-kits").innerHTML = `<thead><tr><th>Kit (held unfinished)</th><th class="r">On hand / target</th><th class="r">Age, days</th><th class="r">Value</th><th>Status</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+  $("#ps-parts").innerHTML = `<thead><tr><th>Part</th><th>Used by</th><th class="r">On hand</th><th class="r">Need, next 8 wk</th><th class="r">Supplier lead time</th><th class="r">Supplier on-time</th><th>Status</th></tr></thead><tbody>` +
+    PARTS.map(p => { const short = p[2] < p[3]; const st = short ? (p[4] > 8 ? ["serious", "Short: expedite"] : ["warn", "Short: reorder"]) : ["good", "Covered"];
+      return `<tr><td>${esc(p[0])}</td><td>${esc(p[1])}</td><td class="r num">${p[2]}</td><td class="r num">${p[3]}</td><td class="r num">${p[4]} wk</td><td class="r num">${pct(p[5])}</td><td><span class="chip ${st[0]}"><span class="dot"></span>${st[1]}</span></td></tr>`; }).join("") + "</tbody>";
+}
+
+/* ---------- validation ---------- */
+function renderValidation() {
+  $("#va-kpis").innerHTML = kpiHTML([
+    { lab: "Validation paperwork prep", tip: "Time to prepare the customer's IQ/OQ (installation and operational qualification) documents.", val: "2.5<small> days</small>", ctx: "was 20 working days by hand", tgt: "Target: ≤ 4 days", st: ["good", "On track"] },
+    { lab: "FATs passed first time", tip: "Factory acceptance tests passed at the first attempt.", val: "83<small>%</small>", ctx: "month 1: 62%", tgt: "Target: ≥ 85%", st: ["warn", "Close"] },
+    { lab: "Customers accepting leveraged FAT", tip: "Customers whose QA accepts factory-test evidence in place of repeated site tests (EU GMP Annex 15 §3.6).", val: "3<small> of 5</small>", ctx: "pilot customers", tgt: "Gate: ≥ 1 of 2", st: ["good", "Met"] },
+    { lab: "Site acceptance test, leveraged", tip: "Site acceptance test (SAT) days when the customer accepts FAT evidence.", val: "3<small> days</small>", ctx: "full SAT: about 10 days", tgt: "Target: ≤ 3 days", st: ["good", "On track"] },
+    { lab: "PQ at the customer site", tip: "Performance qualification runs on the customer's product. It is customer-owned and never compressed.", val: "4-5<small> wk</small>", ctx: "customer-owned, never compressed" }
+  ]);
+  setHL("validation", `Validation paperwork now takes <b>2.5 days instead of 20</b>, and <b>3 of 5 pilot customers</b> accept leveraged FAT, cutting site testing from about 10 days to 3. PQ stays with the customer.`);
+  const months = Array.from({ length: 12 }, (_, i) => "M" + (i + 1));
+  lineChart($("#va-fpy"), { label: "FAT first-pass yield", x: months, min: 50, max: 90, ticks: [50, 60, 70, 80, 90], fmt: v => Math.round(v) + "%", every: 1,
+    series: [{ name: "First-pass yield", color: "--l1", area: true, values: [62, 64, 63, 67, 70, 72, 74, 76, 78, 80, 81, 83] }] });
+  const sat = [["SH-0388", 10, 0], ["SH-0391", 3, 1], ["SH-0394", 12, 0], ["SH-0397", 2, 1], ["SH-0399", 9, 0], ["SH-0402", 3, 1], ["SH-0405", 11, 0], ["SH-0408", 4, 1]];
+  barChart($("#va-sat"), { label: "SAT duration by order", labels: sat.map(s => s[0].slice(3)), values: sat.map(s => s[1]), colors: sat.map(s => s[2] ? "--l1" : "--zb"), fmt: v => Math.round(v) + "", max: 15, ticks: [0, 5, 10, 15],
+    tipExtra: sat.map(s => " days · " + (s[2] ? "leveraged FAT accepted" : "full SAT")) });
+  hBars($("#va-cov"), { label: "Script coverage by family", W: 1180, max: 1, fmt: v => pct(v), items: [
+    { label: "SMARTCOATER X•ONE", v: 0.88 }, { label: "HSM X•ONE", v: 0.82 }, { label: "FBE / FBC X•ONE", v: 0.78 }, { label: "GT X•ONE trains", v: 0.64 }, { label: "GTC III (OEB 5)", v: 0.35, color: "--l3" }] });
+}
+
+/* ---------- impact what-if ---------- */
+const SPLIT = { A: 0.60, B: 0.25, C: 0.15 };
+function impact(s) {
+  const con = Math.max(0, 1 - s.cat - s.bes);
+  const internal = s.cat * s.ccat + con * s.ccon + s.bes * s.cbes;
+  const total = SPLIT.A * internal + SPLIT.B * s.zb * s.acc;
+  return { con, internal, total, thr: 1 / (1 - internal) };
+}
+const IM = ["mixcat", "mixbes", "ccat", "ccon", "cbes", "zb", "acc"];
+function readImpact() { const v = {}; IM.forEach(k => { v[k] = +$("#im-" + k).value / 100; }); return { cat: v.mixcat, bes: v.mixbes, ccat: v.ccat, ccon: v.ccon, cbes: v.cbes, zb: v.zb, acc: v.acc }; }
+function renderImpact() {
+  const s = readImpact();
+  if (s.cat + s.bes > 1) { s.bes = 1 - s.cat; $("#im-mixbes").value = Math.round(s.bes * 100); }
+  const r = impact(s);
+  $("#o-mixcat").textContent = pct(s.cat); $("#o-mixbes").textContent = pct(s.bes) + " · controlled " + pct(r.con);
+  $("#o-ccat").textContent = pct(s.ccat); $("#o-ccon").textContent = pct(s.ccon); $("#o-cbes").textContent = pct(s.cbes); $("#o-zb").textContent = pct(s.zb); $("#o-acc").textContent = pct(s.acc);
+  $("#im-stats").innerHTML = [["Internal lead time", "−" + pct(r.internal)], ["Order-to-delivery", "−" + pct(r.total)], ["Throughput ceiling", r.thr.toFixed(2) + "x"]]
+    .map(x => `<div><span class="lab">${x[0]}</span><span class="v">${x[1]}</span></div>`).join("");
+  const total = 33.3, A = total * SPLIT.A, B = total * SPLIT.B, C = total * SPLIT.C;
+  stackRows($("#im-zones"), { label: "Order-to-delivery by zone", max: 35, rows: [
+    { label: "Today", segs: [{ name: "ACG-internal", w: A, color: "--l1" }, { name: "Customer-site testing", w: B, color: "--zb" }, { name: "PQ floor", w: C, hatch: true }] },
+    { label: "With plan", segs: [{ name: "ACG-internal", w: A * (1 - r.internal), color: "--l1" }, { name: "Customer-site testing", w: B * (1 - s.zb * s.acc), color: "--zb" }, { name: "PQ floor", w: C, hatch: true }] }] });
+  const need = (0.20 - SPLIT.B * s.zb * s.acc) / SPLIT.A;
+  setHL("impact", `At these settings internal lead time falls <b>${pct(r.internal)}</b> and the customer's order-to-delivery <b>${pct(r.total)}</b>: a 33-week order ships in <b>${(33 * (1 - r.total)).toFixed(1)} weeks</b>. PQ never moves.`);
+  $("#im-must").textContent = `For a 20% order-to-delivery cut at these settings, internal compression must reach at least ${pct(Math.max(0, need))}. Example order: 33 weeks today, ${(total * (1 - r.total)).toFixed(1)} weeks with the plan.`;
+  const sc = [
+    ["Your settings", s],
+    ["Lane compression halved", Object.assign({}, s, { ccat: s.ccat / 2, ccon: s.ccon / 2, cbes: s.cbes / 2 })],
+    ["Leveraged FAT refused", Object.assign({}, s, { acc: 0 })],
+    ["Both", Object.assign({}, s, { ccat: s.ccat / 2, ccon: s.ccon / 2, cbes: s.cbes / 2, acc: 0 })]
+  ];
+  $("#im-sens").innerHTML = `<thead><tr><th>Scenario</th><th class="r">Internal</th><th class="r">Order-to-delivery</th><th class="r">Throughput ceiling</th></tr></thead><tbody>` +
+    sc.map(x => { const q = impact(x[1]); return `<tr><td>${x[0]}</td><td class="r num">−${pct(q.internal)}</td><td class="r num">−${pct(q.total)}</td><td class="r num">${q.thr.toFixed(2)}x</td></tr>`; }).join("") + "</tbody>";
+}
+IM.forEach(k => $("#im-" + k).addEventListener("input", renderImpact));
+
+/* ---------- business case ---------- */
+const SPEND = [
+  ["Freeze gate, BOM study, FAT pilot, planning board", 1, 0.6],
+  ["Finite-capacity scheduling and ERP integration", 2, 1.5],
+  ["Validation engine licences and script library", 2, 1.5],
+  ["Catalog designs and frozen interfaces", 2, 1.2],
+  ["Family bays fit-out in the expansion shed", 2, 1.5],
+  ["Extend pre-staging to GT trains", 3, 1.0],
+  ["Remote or hybrid FAT setup", 3, 0.7],
+  ["Licences and upkeep", 4, 0.4],
+  ["Licences and upkeep", 5, 0.4]
+];
+const INV = [1, 2, 3, 4, 5].map(y => SPEND.filter(s => s[1] === y).reduce((a, s) => a + s[2], 0));
+function biz(p) {
+  const q = Object.assign({ inv: INV, orders: 75, aov: 2, cogs: 0.70, cm: 0.30, T0: 20, comp: 0.30, wipf: 0.5, vol: 0.08, rew: 0.03, rewCut: 0.25, late: 0.25, ld: 0.02, ldCut: 0.5, kits: 8, kitVal: 0.59, r: 0.12, scale: 1 }, p);
+  const R = q.orders * q.aov, C = R * q.cogs;
+  const wip0 = C / 52 * q.T0 * q.wipf, rel = wip0 * q.comp;
+  const kitInv = q.kits * q.kitVal, netWc = rel - kitInv;
+  const bVol = q.orders * q.vol * q.aov * q.cm * q.scale, bRew = C * q.rew * q.rewCut * q.scale, bLd = q.orders * q.late * q.aov * q.ld * q.ldCut * q.scale, bCc = Math.max(netWc, 0) * q.r;
+  const ben = bVol + bRew + bLd + bCc;
+  const ramp = [0.1, 0.4, 0.8, 1, 1], wc = [0, -kitInv + rel * 0.5, rel * 0.5, 0, 0];
+  const cf = ramp.map((rp, i) => rp * ben - q.inv[i] + wc[i]);
+  let cum = 0; const cums = cf.map(v => (cum += v));
+  const npv = cf.reduce((a, v, i) => a + v / Math.pow(1 + q.r, i + 1), 0);
+  let pb = null;
+  for (let i = 1; i < 5; i++) if (cums[i] >= 0 && cums[i - 1] < 0) { pb = i + (-cums[i - 1] / cf[i]); break; }
+  if (pb === null && cums[0] >= 0) pb = 0;
+  return { R, rel, kitInv, netWc, bVol, bRew, bLd, bCc, ben, cf, cums, npv, pb, peak: Math.min.apply(null, cums.concat([0])) };
+}
+function breakEvenVol(base) {
+  let lo = 0, hi = 0.5;
+  if (biz(Object.assign({}, base, { vol: hi })).npv < 0) return null;
+  if (biz(Object.assign({}, base, { vol: lo })).npv >= 0) return 0;
+  for (let i = 0; i < 50; i++) { const mid = (lo + hi) / 2; if (biz(Object.assign({}, base, { vol: mid })).npv >= 0) hi = mid; else lo = mid; }
+  return hi;
+}
+const FI = ["orders", "aov", "cm", "comp", "vol", "kits", "r"];
+function readFin() {
+  return { orders: +$("#fi-orders").value, aov: +$("#fi-aov").value, cm: +$("#fi-cm").value / 100, comp: +$("#fi-comp").value / 100, vol: +$("#fi-vol").value / 100, kits: +$("#fi-kits").value, r: +$("#fi-r").value / 100 };
+}
+const yrs = v => v === null ? "beyond 5 years" : v.toFixed(1) + " years";
+const LEAN_SPEND = [["Freeze gate, BOM study, FAT pilot, planning board", 1, 0.6], ["Validation library (scripts and licences)", 2, 1.5], ["Light finite-capacity scheduling tool", 2, 0.5], ["Upkeep", 3, 0.4], ["Upkeep", 4, 0.4], ["Upkeep", 5, 0.4]];
+const LEAN = { comp: 0.15, vol: 0, kits: 0, rewCut: 0.15, ldCut: 0.25, inv: [0.6, 2.0, 0.4, 0.4, 0.4] };
+let finMode = "full";
+function renderFinance() {
+  const raw = readFin();
+  const p = finMode === "lean" ? Object.assign({}, raw, LEAN) : finMode === "none" ? Object.assign({}, raw, { vol: 0 }) : raw;
+  const m = biz(p), be = finMode === "lean" ? 0 : breakEvenVol(raw);
+  const spendTot = p.inv ? p.inv.reduce((a, b) => a + b, 0) : INV.reduce((a, b) => a + b, 0);
+  $$("#fi-mode button").forEach(b => b.setAttribute("aria-pressed", b.getAttribute("data-mode") === finMode ? "true" : "false"));
+  FI.forEach(k => { const lock = finMode === "lean" ? k !== "orders" && k !== "aov" && k !== "r" : finMode === "none" && k === "vol"; $("#fi-" + k).disabled = lock; $("#fi-" + k).closest(".ctl").classList.toggle("off", lock); });
+  setHL("finance", finMode === "lean"
+    ? `<b>Lean core only:</b> ${cr(spendTot)} returns an NPV of <b>${cr(m.npv)}</b> and pays back in <b>${yrs(m.pb)}</b> with zero extra orders. The ₹5.0 Cr growth module waits for the Year 1 gate.`
+    : finMode === "none"
+    ? `<b>Full plan, no extra orders:</b> NPV <b>${cr(m.npv)}</b>, payback ${yrs(m.pb)}. This is the case the Year 1 gate prevents: if faster delivery wins no orders, stop at the lean core.`
+    : `<b>Full plan:</b> ${cr(spendTot)} over five years returns an NPV of <b>${cr(m.npv)}</b> and pays back in <b>${yrs(m.pb)}</b>. It breaks even at just <b>${be === null ? "n/a" : (raw.orders * be).toFixed(1)} extra machines a year</b>.`);
+  $("#fi-cash-h").textContent = finMode === "lean" ? "Cash flow, lean core, Years 1-5" : finMode === "none" ? "Cash flow, full plan with no extra orders" : "Cash flow, full plan, Years 1-5";
+  $("#fi-spend-h").textContent = finMode === "lean" ? "Spend, lean core" : "Spend by lever, full plan";
+  $("#o-orders").textContent = p.orders + " · " + cr(p.orders * p.aov, 0) + " revenue";
+  $("#o-aov").textContent = cr(p.aov, 2); $("#o-cm").textContent = pct(p.cm); $("#o-comp").textContent = pct(p.comp);
+  $("#o-vol").textContent = (p.vol * 100).toFixed(1) + "% · " + (p.orders * p.vol).toFixed(1) + " machines"; $("#o-kits").textContent = p.kits + " · " + cr(p.kits * 0.59, 2); $("#o-r").textContent = pct(p.r);
+  $("#fi-kpis").innerHTML = kpiHTML([
+    { lab: "5-year NPV", tip: "Net present value of five years of cash flow at the discount rate.", val: cr(m.npv), ctx: `on ${cr(spendTot)} spend · ${pct(p.r)} discount rate`, tgt: "Target: > 0", st: m.npv > 0 ? ["good", "Positive"] : ["crit", "Negative"] },
+    { lab: "Payback", val: m.pb === null ? "—" : m.pb.toFixed(1) + "<small> yr</small>", ctx: "from programme start", tgt: "Target: ≤ 4 yr", st: m.pb === null ? ["crit", "Not in 5 yr"] : m.pb <= 4 ? ["good", "On track"] : ["warn", "Slow"] },
+    { lab: "Benefit at maturity", val: cr(m.ben) + "<small>/yr</small>", ctx: "from Year 4" },
+    { lab: "Peak cash needed", tip: "Lowest point of cumulative cash: the most money tied up at once.", val: cr(m.peak), ctx: "lowest cumulative cash", tgt: "Capex budget: ₹10-15 Cr a year" },
+    { lab: "Cash freed from work-in-progress", tip: "Shorter cycles mean less half-built inventory. Net of cash put into pre-built kits.", val: cr(m.netWc), ctx: `WIP freed ${cr(m.rel)} · kits ${cr(m.kitInv)}` },
+    { lab: "Break-even", val: finMode === "lean" ? "Not needed" : be === null ? "not reached" : (raw.orders * be).toFixed(1) + "<small> machines</small>", ctx: finMode === "lean" ? "core assumes zero extra orders" : be === null ? "even at 50% more machines" : (be * 100).toFixed(1) + "% more machines a year", st: finMode === "lean" ? ["good", "No growth needed"] : be !== null && be <= raw.vol ? ["good", "Covered"] : ["warn", "Check"] }
+  ]);
+  cashChart($("#fi-cash"), m);
+  hBars($("#fi-ben"), { label: "Benefit by source", left: 190, fmt: v => cr(v, 2), max: Math.max(0.5, m.bVol, m.bRew, m.bLd, m.bCc) * 1.05, items: [
+    { label: "Extra machines won", v: m.bVol }, { label: "Less rework", v: m.bRew }, { label: "Fewer late penalties", v: m.bLd }, { label: "Capital released", v: m.bCc }] });
+  const SP = finMode === "lean" ? LEAN_SPEND : SPEND;
+  $("#fi-spend").innerHTML = `<thead><tr><th>Item</th><th class="r">Year</th><th class="r">₹ Cr</th></tr></thead><tbody>` +
+    SP.map(s => `<tr><td>${esc(s[0])}</td><td class="r num">${s[1]}</td><td class="r num">${s[2].toFixed(1)}</td></tr>`).join("") +
+    `<tr><td><strong>Total</strong></td><td></td><td class="r num"><strong>${spendTot.toFixed(1)}</strong></td></tr></tbody>`;
+  const sc = [
+    ["Full plan, your inputs", raw, ""],
+    ["Upside: compression +15 pts, 50% more extra machines", Object.assign({}, raw, { comp: Math.min(0.6, raw.comp + 0.15), vol: raw.vol * 1.5 }), ""],
+    ["Lean core only, no extra orders (fallback)", Object.assign({}, raw, LEAN), "lean"],
+    ["All benefits halved", Object.assign({}, raw, { scale: 0.5 }), ""],
+    ["Full plan, no extra machines", Object.assign({}, raw, { vol: 0 }), ""]
+  ];
+  $("#fi-scen").innerHTML = `<thead><tr><th>Scenario</th><th class="r">Benefit / yr</th><th class="r">NPV</th><th class="r">Payback</th></tr></thead><tbody>` +
+    sc.map(x => { const q = biz(x[1]); return `<tr class="${x[2]}"><td>${x[0]}</td><td class="r num">${cr(q.ben)}</td><td class="r num">${cr(q.npv)}</td><td class="r num">${yrs(q.pb)}</td></tr>`; }).join("") + "</tbody>";
+}
+function cashChart(el, m) {
+  const W = 640, H = 250, ml = 44, mr = 16, mt = 16, mb = 30, iw = W - ml - mr, ih = H - mt - mb;
+  const vals = m.cf.concat(m.cums);
+  let lo = Math.min(0, Math.min.apply(null, vals)), hi = Math.max(0, Math.max.apply(null, vals));
+  lo = Math.floor(lo / 2) * 2 - (lo < 0 ? 0 : 0); hi = Math.ceil(hi / 2) * 2 || 2; if (lo === hi) hi = lo + 2;
+  const y = v => mt + ih - (v - lo) / (hi - lo) * ih, gap = iw / 5, bw = Math.min(48, gap * 0.5);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cash flow by year">`;
+  const step = (hi - lo) > 16 ? 4 : 2;
+  for (let t = lo; t <= hi + 0.001; t += step) {
+    s += `<line x1="${ml}" x2="${ml + iw}" y1="${y(t)}" y2="${y(t)}" style="stroke:${t === 0 ? "var(--ink-3)" : "var(--line)"}"/>`;
+    s += `<text x="${ml - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" style="fill:var(--ink-3)">${t}</text>`;
+  }
+  m.cf.forEach((v, i) => {
+    const cx = ml + gap * i + gap / 2, y0 = y(0), y1 = y(v);
+    const top = Math.min(y0, y1), h = Math.max(1, Math.abs(y1 - y0));
+    s += `<rect x="${cx - bw / 2}" y="${top}" width="${bw}" height="${h}" rx="3" style="fill:var(${v < 0 ? "--zb" : "--band"})" data-tip="${esc("Year " + (i + 1) + "|Net cash flow: " + cr(v, 2) + "|Cumulative: " + cr(m.cums[i], 2))}"/>`;
+    s += `<text x="${cx}" y="${H - 10}" text-anchor="middle" font-size="11" style="fill:var(--ink-2)">Y${i + 1}</text>`;
+  });
+  const pts = m.cums.map((v, i) => [ml + gap * i + gap / 2, y(v)]);
+  s += `<path d="${pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join("")}" fill="none" style="stroke:var(--ink)" stroke-width="2"/>`;
+  pts.forEach((p, i) => { s += `<circle cx="${p[0]}" cy="${p[1]}" r="4" style="fill:var(--ink);stroke:var(--surface)" stroke-width="2" data-tip="${esc("Year " + (i + 1) + " cumulative: " + cr(m.cums[i], 2))}"/>`; });
+  const lp = pts[4]; s += `<text x="${lp[0]}" y="${lp[1] - 10}" text-anchor="middle" font-size="12" font-weight="600" style="fill:var(--ink)">${cr(m.cums[4])}</text>`;
+  el.innerHTML = s + "</svg>";
+}
+FI.forEach(k => $("#fi-" + k).addEventListener("input", renderFinance));
+$("#fi-mode").addEventListener("click", e => { const b = e.target.closest("button[data-mode]"); if (!b) return; finMode = b.getAttribute("data-mode"); renderFinance(); });
+
+/* ---------- gate ---------- */
+function renderGate() {
+  const G = [
+    ["Design plus sourcing share of order-to-dispatch time", "≥ 50%", "54%", "good", "Met"],
+    ["BOM value common across sizes in a family", "≥ 60%", "66%", "good", "Met"],
+    ["Changes after design freeze, per order", "< 1.0", "1.4 (12-month avg)", "warn", "Not yet: tighten the gate"],
+    ["Pilot customers accepting leveraged FAT", "≥ 1 of 2", "2 of 2", "good", "Met"],
+    ["Quotes lost on lead time in the last 12 months", "≥ 3 machines", "5 machines", "good", "Met: growth case holds"]
+  ];
+  $("#gt-table").innerHTML = `<thead><tr><th>Criterion</th><th>Threshold</th><th class="r">Year 1 reading</th><th>Status</th></tr></thead><tbody>` +
+    G.map(g => `<tr><td>${esc(g[0])}</td><td class="mono">${esc(g[1])}</td><td class="r num">${esc(g[2])}</td><td><span class="chip ${g[3]}"><span class="dot"></span>${esc(g[4])}</span></td></tr>`).join("") + "</tbody>";
+  $("#gt-decision").innerHTML = `<span class="chip good"><span class="dot"></span>Go, with one condition: freeze discipline</span>`;
+  const met = G.filter(g => g[3] === "good").length;
+  setHL("gate", `<b>Gate decision: Go.</b> ${met} of ${G.length} criteria are met, including the growth test (5 machines lost on lead time). Tighten design-freeze discipline before Year 2 money is released.`);
+}
+
+/* ---------- tabs ---------- */
+const TABS = ["overview", "configure", "finance", "gate", "orders", "prestage", "validation", "impact"];
+const MORE = ["orders", "prestage", "validation", "impact"];
+const navEl = $("nav.tabs"), moreBtn = $("#more-btn");
+function setMore(on) { navEl.classList.toggle("show-more", on); moreBtn.setAttribute("aria-expanded", on ? "true" : "false"); moreBtn.textContent = on ? "Fewer views ▴" : "More views ▾"; }
+moreBtn.addEventListener("click", () => setMore(!navEl.classList.contains("show-more")));
+function show(t) {
+  if (TABS.indexOf(t) < 0) t = "overview";
+  if (MORE.indexOf(t) >= 0) setMore(true);
+  TABS.forEach(k => { $("#p-" + k).hidden = k !== t; $("#t-" + k).setAttribute("aria-selected", k === t ? "true" : "false"); $("#t-" + k).tabIndex = k === t ? 0 : -1; });
+  try { if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t); } catch (e) {}
+  try { localStorage.setItem("sct-tab", t); } catch (e) {}
+}
+$("nav.tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) show(b.getAttribute("data-tab")); });
+$("nav.tabs").addEventListener("keydown", e => {
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const cur = TABS.findIndex(k => $("#t-" + k).getAttribute("aria-selected") === "true");
+  const nx = TABS[(cur + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+  show(nx); $("#t-" + nx).focus();
+});
+window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+$("#ov-viewall").addEventListener("click", () => { show("orders"); window.scrollTo(0, 0); });
+const presentBtn = $("#present-btn");
+function setPresent(on) { document.documentElement.classList.toggle("present", on); presentBtn.setAttribute("aria-pressed", on ? "true" : "false"); try { localStorage.setItem("sct-present", on ? "1" : "0"); } catch (e) {} }
+presentBtn.addEventListener("click", () => setPresent(!document.documentElement.classList.contains("present")));
+try { if (localStorage.getItem("sct-present") === "1") setPresent(true); } catch (e) {}
+renderOverview(); buildConfigControls(); renderOrders(); renderPrestage(); renderValidation(); renderImpact(); renderFinance(); renderGate();
+let start = location.hash.slice(1);
+if (TABS.indexOf(start) < 0) { try { start = localStorage.getItem("sct-tab") || "overview"; } catch (e) { start = "overview"; } }
+show(start);
+window.__test = { configure, biz, impact, breakEvenVol };
+})();
+</script>
